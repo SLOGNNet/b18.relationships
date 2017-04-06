@@ -40,6 +40,22 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
+    public CompletionStage<RelationshipState> updateRelationship(String id, Optional<String> provider, Optional<String> customer, Optional<Date> startDate, Optional<Date> terminationDate, Optional<String> notes, Optional<PVector<Assignment>> assignments) {
+        UpdateRelationship cmd = UpdateRelationship.builder()
+                .provider(provider)
+                .customer(customer)
+                .startDate(startDate)
+                .terminationDate(terminationDate)
+                .notes(notes)
+                .assignments(assignments)
+                .build();
+
+        PersistentEntityRef ref = persistentEntityRegistry.refFor(RelationshipEntity.class, id);
+
+        return ref.ask(cmd);
+    }
+
+    @Override
     public CompletionStage<RelationshipState> getRelationship(String id) {
         GetRelationship cmd = GetRelationship.builder().build();
 

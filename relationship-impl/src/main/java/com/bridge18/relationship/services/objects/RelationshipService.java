@@ -18,7 +18,16 @@ public interface RelationshipService {
                                                           Optional<Date> terminationDate,
                                                           Optional<String> notes,
                                                           Optional<PVector<Assignment>> assignments
-                                                          );
+    );
+
+    CompletionStage<RelationshipState> updateRelationship(String id,
+                                                          Optional<String> provider,
+                                                          Optional<String> customer,
+                                                          Optional<Date> startDate,
+                                                          Optional<Date> terminationDate,
+                                                          Optional<String> notes,
+                                                          Optional<PVector<Assignment>> assignments
+    );
 
     CompletionStage<RelationshipState> getRelationship(String id);
 

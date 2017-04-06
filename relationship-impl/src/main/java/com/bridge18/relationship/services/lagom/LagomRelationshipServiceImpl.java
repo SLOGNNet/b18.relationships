@@ -48,6 +48,28 @@ public class LagomRelationshipServiceImpl implements LagomRelationshipService {
     }
 
     @Override
+    public ServiceCall<RelationshipDTO, RelationshipDTO> updateRelationship(String id) {
+        return request -> {
+            PVector<Assignment> assignments = Optional.ofNullable(request.assignments).isPresent() ?
+                    TreePVector.from(
+                            Lists.transform(request.assignments,
+                                    assignmentDTO -> Assignment.builder()
+                                            .assignment(assignmentDTO.assignment)
+                                            .type(assignmentDTO.type)
+                                            .notes(assignmentDTO.notes)
+                                            .build()
+                            )
+                    ) : null;
+            return relationshipService.updateRelationship(id, Optional.ofNullable(request.provider),
+                    Optional.ofNullable(request.customer), Optional.ofNullable(request.startDate),
+                    Optional.ofNullable(request.terminationDate), Optional.ofNullable(request.notes),
+                    Optional.ofNullable(assignments))
+
+                    .thenApply(this::convertRelationshipStateToRelationshipDTO);
+        };
+    }
+
+    @Override
     public ServiceCall<AssignmentDTO, RelationshipDTO> createAssignment(String id) {
         return request ->
                 relationshipService.createAssignment(id,

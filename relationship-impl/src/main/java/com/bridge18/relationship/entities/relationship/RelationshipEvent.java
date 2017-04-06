@@ -35,6 +35,27 @@ public interface RelationshipEvent extends Jsonable {
     @Value.Immutable
     @JsonDeserialize
     @ImmutableStyle
+    interface AbstractRelationshipUpdated extends RelationshipEvent {
+        @Value.Parameter
+        String getId();
+
+        @Value.Parameter
+        Optional<String> getProvider();
+        @Value.Parameter
+        Optional<String> getCustomer();
+        @Value.Parameter
+        Optional<Date> getStartDate();
+        @Value.Parameter
+        Optional<Date> getTerminationDate();
+        @Value.Parameter
+        Optional<String> getNotes();
+        @Value.Parameter
+        Optional<PVector<Assignment>> getAssignments();
+    }
+
+    @Value.Immutable
+    @JsonDeserialize
+    @ImmutableStyle
     interface AbstractAssignmentCreated extends RelationshipEvent{
         @Value.Parameter
         Optional<String> getAssignment();

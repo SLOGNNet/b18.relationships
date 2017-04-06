@@ -38,6 +38,25 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
         );
 
         b.setCommandHandler(
+                UpdateRelationship.class,
+                (cmd, ctx) ->
+                        ctx.thenPersist(
+                                RelationshipCreated.builder()
+                                        .id(entityId())
+                                        .provider(cmd.getProvider())
+                                        .customer(cmd.getCustomer())
+                                        .startDate(cmd.getStartDate())
+                                        .terminationDate(cmd.getTerminationDate())
+                                        .notes(cmd.getNotes())
+                                        .assignments(cmd.getAssignments())
+                                        .build(),
+                                evt -> {
+                                    ctx.reply(state());
+                                }
+                        )
+        );
+
+        b.setCommandHandler(
                 CreateAssignment.class,
                 (cmd, ctx) ->
                         ctx.thenPersist(
@@ -69,6 +88,20 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
 
         b.setEventHandler(
                 RelationshipCreated.class,
+                evt ->
+                        RelationshipState.builder()
+                                .id(entityId())
+                                .provider(evt.getProvider())
+                                .customer(evt.getCustomer())
+                                .startDate(evt.getStartDate())
+                                .terminationDate(evt.getTerminationDate())
+                                .notes(evt.getNotes())
+                                .assignments(evt.getAssignments())
+                                .build()
+        );
+
+        b.setEventHandler(
+                RelationshipUpdated.class,
                 evt ->
                         RelationshipState.builder()
                                 .id(entityId())

@@ -40,6 +40,29 @@ public interface RelationshipCommand extends Jsonable {
     @Value.Immutable
     @ImmutableStyle
     @JsonDeserialize
+    interface AbstractUpdateRelationship extends RelationshipCommand, CompressedJsonable, PersistentEntity.ReplyType<RelationshipState> {
+        @Value.Parameter
+        Optional<String> getProvider();
+
+        @Value.Parameter
+        Optional<String> getCustomer();
+
+        @Value.Parameter
+        Optional<Date> getStartDate();
+
+        @Value.Parameter
+        Optional<Date> getTerminationDate();
+
+        @Value.Parameter
+        Optional<String> getNotes();
+
+        @Value.Parameter
+        Optional<PVector<Assignment>> getAssignments();
+    }
+
+    @Value.Immutable
+    @ImmutableStyle
+    @JsonDeserialize
     interface AbstractCreateAssignment extends RelationshipCommand, CompressedJsonable, PersistentEntity.ReplyType<RelationshipState> {
         @Value.Parameter
         Optional<String> getAssignment();
