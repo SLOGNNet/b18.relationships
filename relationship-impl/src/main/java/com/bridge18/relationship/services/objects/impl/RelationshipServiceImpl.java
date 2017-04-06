@@ -1,5 +1,6 @@
 package com.bridge18.relationship.services.objects.impl;
 
+import akka.Done;
 import com.bridge18.relationship.entities.relationship.*;
 import com.bridge18.relationship.services.objects.RelationshipService;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntityRef;
@@ -41,6 +42,30 @@ public class RelationshipServiceImpl implements RelationshipService {
     @Override
     public CompletionStage<RelationshipState> getRelationship(String id) {
         GetRelationship cmd = GetRelationship.builder().build();
+
+        PersistentEntityRef ref = persistentEntityRegistry.refFor(RelationshipEntity.class, id);
+
+        return ref.ask(cmd);
+    }
+
+    @Override
+    public CompletionStage<RelationshipState> createAssignment(String id, Optional<String> assignment, Optional<AssignmentType> type, Optional<String> notes) {
+        CreateAssignment cmd = CreateAssignment.builder()
+                .assignment(assignment)
+                .type(type)
+                .notes(notes)
+                .build();
+
+        PersistentEntityRef ref = persistentEntityRegistry.refFor(RelationshipEntity.class, id);
+
+        return ref.ask(cmd);
+    }
+
+    @Override
+    public CompletionStage<Done> deleteAssignment(String id, String assignment) {
+        DeleteAssignment cmd = DeleteAssignment.builder()
+                .assignment(assignment)
+                .build();
 
         PersistentEntityRef ref = persistentEntityRegistry.refFor(RelationshipEntity.class, id);
 

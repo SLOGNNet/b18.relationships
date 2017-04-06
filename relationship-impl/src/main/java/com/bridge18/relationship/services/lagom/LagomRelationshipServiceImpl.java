@@ -1,5 +1,6 @@
 package com.bridge18.relationship.services.lagom;
 
+import akka.Done;
 import akka.NotUsed;
 import com.bridge18.relationship.api.LagomRelationshipService;
 import com.bridge18.relationship.dto.relationship.AssignmentDTO;
@@ -44,6 +45,23 @@ public class LagomRelationshipServiceImpl implements LagomRelationshipService {
 
                     .thenApply(this::convertRelationshipStateToRelationshipDTO);
         };
+    }
+
+    @Override
+    public ServiceCall<AssignmentDTO, RelationshipDTO> createAssignment(String id) {
+        return request ->
+                relationshipService.createAssignment(id,
+                        Optional.ofNullable(request.assignment),
+                        Optional.ofNullable(request.type),
+                        Optional.ofNullable(request.notes)
+                )
+                        .thenApply(this::convertRelationshipStateToRelationshipDTO);
+    }
+
+    @Override
+    public ServiceCall<NotUsed, Done> deleteAssignment(String id, String assignment) {
+        return request ->
+                relationshipService.deleteAssignment(id, assignment);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.bridge18.relationship.entities.relationship;
 
 
+import akka.Done;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.lightbend.lagom.javadsl.immutable.ImmutableStyle;
 import com.lightbend.lagom.javadsl.persistence.PersistentEntity;
@@ -34,6 +35,26 @@ public interface RelationshipCommand extends Jsonable {
 
         @Value.Parameter
         Optional<PVector<Assignment>> getAssignments();
+    }
+
+    @Value.Immutable
+    @ImmutableStyle
+    @JsonDeserialize
+    interface AbstractCreateAssignment extends RelationshipCommand, CompressedJsonable, PersistentEntity.ReplyType<RelationshipState> {
+        @Value.Parameter
+        Optional<String> getAssignment();
+        @Value.Parameter
+        Optional<AssignmentType> getType();
+        @Value.Parameter
+        Optional<String> getNotes();
+    }
+
+    @Value.Immutable
+    @ImmutableStyle
+    @JsonDeserialize
+    interface AbstractDeleteAssignment extends RelationshipCommand, CompressedJsonable, PersistentEntity.ReplyType<Done>{
+        @Value.Parameter
+        Optional<String> getAssignment();
     }
 
     @Value.Immutable
