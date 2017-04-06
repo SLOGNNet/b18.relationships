@@ -1,0 +1,22 @@
+package com.bridge18.relationship.services.objects;
+
+
+import com.bridge18.relationship.entities.relationship.Assignment;
+import com.bridge18.relationship.entities.relationship.RelationshipState;
+import org.pcollections.PVector;
+
+import java.util.Date;
+import java.util.Optional;
+import java.util.concurrent.CompletionStage;
+
+public interface RelationshipService {
+    CompletionStage<RelationshipState> createRelationship(Optional<String> provider,
+                                                          Optional<String> customer,
+                                                          Optional<Date> startDate,
+                                                          Optional<Date> terminationDate,
+                                                          Optional<String> notes,
+                                                          Optional<PVector<Assignment>> assignments
+                                                          );
+
+    CompletionStage<RelationshipState> getRelationship(String id);
+}
