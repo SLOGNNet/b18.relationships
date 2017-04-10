@@ -70,6 +70,12 @@ public class LagomRelationshipServiceImpl implements LagomRelationshipService {
     }
 
     @Override
+    public ServiceCall<NotUsed, Done> deleteRelationship(String id) {
+        return request ->
+                relationshipService.deleteRelationship(id);
+    }
+
+    @Override
     public ServiceCall<AssignmentDTO, RelationshipDTO> createAssignment(String id) {
         return request ->
                 relationshipService.createAssignment(id,

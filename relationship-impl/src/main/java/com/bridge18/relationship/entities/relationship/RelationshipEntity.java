@@ -57,6 +57,19 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
         );
 
         b.setCommandHandler(
+                DeleteRelationship.class,
+                (cmd, ctx) ->
+                        ctx.thenPersist(
+                                RelationshipDeleted.builder()
+                                        .id(entityId())
+                                        .build(),
+                                evt -> {
+                                    ctx.reply(Done.getInstance());
+                                }
+                        )
+        );
+
+        b.setCommandHandler(
                 CreateAssignment.class,
                 (cmd, ctx) ->
                         ctx.thenPersist(
@@ -111,6 +124,14 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
                                 .terminationDate(evt.getTerminationDate())
                                 .notes(evt.getNotes())
                                 .assignments(evt.getAssignments())
+                                .build()
+        );
+
+        b.setEventHandler(
+                RelationshipDeleted.class,
+                evt ->
+                        RelationshipState.builder()
+                                .id(entityId())
                                 .build()
         );
 

@@ -56,6 +56,15 @@ public class RelationshipServiceImpl implements RelationshipService {
     }
 
     @Override
+    public CompletionStage<Done> deleteRelationship(String id) {
+        DeleteRelationship cmd = DeleteRelationship.builder().build();
+
+        PersistentEntityRef ref = persistentEntityRegistry.refFor(RelationshipEntity.class, id);
+
+        return ref.ask(cmd);
+    }
+
+    @Override
     public CompletionStage<RelationshipState> getRelationship(String id) {
         GetRelationship cmd = GetRelationship.builder().build();
 

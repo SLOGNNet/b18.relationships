@@ -86,4 +86,11 @@ public interface RelationshipCommand extends Jsonable {
     interface AbstractGetRelationship extends RelationshipCommand, CompressedJsonable, PersistentEntity.ReplyType<RelationshipState> {
 
     }
+
+    @Value.Immutable
+    @ImmutableStyle
+    @JsonDeserialize
+    interface AbstractDeleteRelationship extends RelationshipCommand, CompressedJsonable, PersistentEntity.ReplyType<Done> {
+
+    }
 }

@@ -16,6 +16,7 @@ public interface LagomRelationshipService extends Service {
     ServiceCall<RelationshipDTO, RelationshipDTO> createRelationship();
     ServiceCall<RelationshipDTO, RelationshipDTO> updateRelationship(String id);
     ServiceCall<NotUsed, RelationshipDTO> getRelationship(String id);
+    ServiceCall<NotUsed, Done> deleteRelationship(String id);
     ServiceCall<AssignmentDTO, RelationshipDTO> createAssignment(String id);
     ServiceCall<NotUsed, Done> deleteAssignment(String id, String assignment);
 
@@ -25,6 +26,7 @@ public interface LagomRelationshipService extends Service {
         return named("relationship").withCalls(
                 restCall(Method.POST, "/v1/api/relationship", this::createRelationship),
                 restCall(Method.PUT, "/v1/api/relationship/:id", this::updateRelationship),
+                restCall(Method.DELETE, "/v1/api/relationship/:id", this::deleteRelationship),
                 restCall(Method.POST, "/v1/api/relationship/:id/assignment", this::createAssignment),
                 restCall(Method.DELETE, "/v1/api/relationship/:id/assignment/:assignment", this::deleteAssignment),
                 restCall(Method.GET, "/v1/api/relationship/:id", this::getRelationship)

@@ -29,6 +29,8 @@ public interface RelationshipService {
                                                           Optional<PVector<Assignment>> assignments
     );
 
+    CompletionStage<Done> deleteRelationship(String id);
+
     CompletionStage<RelationshipState> getRelationship(String id);
 
     CompletionStage<RelationshipState> createAssignment(String id,
