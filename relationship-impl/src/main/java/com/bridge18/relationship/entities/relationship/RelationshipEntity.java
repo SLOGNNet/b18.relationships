@@ -18,24 +18,39 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
                 snapshotState.orElse(RelationshipState.builder().id(entityId()).build())
         );
 
-        b.setCommandHandler(
-                CreateRelationship.class,
-                (cmd, ctx) ->
-                        ctx.thenPersist(
-                                RelationshipCreated.builder()
-                                        .id(entityId())
-                                        .provider(cmd.getProvider())
-                                        .customer(cmd.getCustomer())
-                                        .startDate(cmd.getStartDate())
-                                        .terminationDate(cmd.getTerminationDate())
-                                        .notes(cmd.getNotes())
-                                        .assignments(cmd.getAssignments())
-                                        .build(),
-                                evt -> {
-                                    ctx.reply(state());
-                                }
-                        )
+        b.setCommandHandler(CreateRelationship.class, (cmd, ctx) ->
+                ctx.thenPersistAll(
+                        () -> ctx.reply(state()),
+                        RelationshipCreated.builder()
+                                .id(entityId())
+                                .provider(cmd.getProvider())
+                                .customer(cmd.getCustomer())
+                                .startDate(cmd.getStartDate())
+                                .terminationDate(cmd.getTerminationDate())
+                                .notes(cmd.getNotes())
+                                .assignments(cmd.getAssignments())
+                                .build(),
+                        RelationshipUpdated.builder()
+                                .id(entityId())
+                                .provider(cmd.getProvider())
+                                .customer(cmd.getCustomer())
+                                .startDate(cmd.getStartDate())
+                                .terminationDate(cmd.getTerminationDate())
+                                .notes(cmd.getNotes())
+                                .assignments(cmd.getAssignments())
+                                .build()
+                ));
+
+        b.setEventHandlerChangingBehavior(
+                RelationshipCreated.class,
+                relationshipCreated -> created(state())
         );
+
+        return b.build();
+    }
+
+    private Behavior created(RelationshipState state) {
+        BehaviorBuilder b = newBehaviorBuilder(state);
 
         b.setCommandHandler(
                 UpdateRelationship.class,
@@ -102,20 +117,6 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
         );
 
         b.setEventHandler(
-                RelationshipCreated.class,
-                evt ->
-                        RelationshipState.builder()
-                                .id(entityId())
-                                .provider(evt.getProvider())
-                                .customer(evt.getCustomer())
-                                .startDate(evt.getStartDate())
-                                .terminationDate(evt.getTerminationDate())
-                                .notes(evt.getNotes())
-                                .assignments(evt.getAssignments())
-                                .build()
-        );
-
-        b.setEventHandler(
                 RelationshipUpdated.class,
                 evt ->
                         RelationshipState.builder()
@@ -126,14 +127,6 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
                                 .terminationDate(evt.getTerminationDate())
                                 .notes(evt.getNotes())
                                 .assignments(evt.getAssignments())
-                                .build()
-        );
-
-        b.setEventHandler(
-                RelationshipDeleted.class,
-                evt ->
-                        RelationshipState.builder()
-                                .id(entityId())
                                 .build()
         );
 
@@ -172,6 +165,23 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
                 }
         );
 
+        b.setEventHandlerChangingBehavior(
+                RelationshipDeleted.class,
+                relationshipDeleted -> deleted(state())
+        );
+
         return b.build();
+    }
+
+    private Behavior deleted(RelationshipState state) {
+        BehaviorBuilder b = newBehaviorBuilder(state);
+
+        b.setReadOnlyCommandHandler(DeleteRelationship.class, this::alreadyDone);
+
+        return b.build();
+    }
+
+    private void alreadyDone(Object command, ReadOnlyCommandContext<Done> ctx) {
+        ctx.reply(Done.getInstance());
     }
 }
