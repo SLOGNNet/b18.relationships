@@ -41,7 +41,7 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
                 UpdateRelationship.class,
                 (cmd, ctx) ->
                         ctx.thenPersist(
-                                RelationshipCreated.builder()
+                                RelationshipUpdated.builder()
                                         .id(entityId())
                                         .provider(cmd.getProvider())
                                         .customer(cmd.getCustomer())
@@ -74,6 +74,7 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
                 (cmd, ctx) ->
                         ctx.thenPersist(
                                 AssignmentCreated.builder()
+                                        .id(entityId())
                                         .assignment(cmd.getAssignment())
                                         .type(cmd.getType())
                                         .notes(cmd.getNotes())
@@ -87,6 +88,7 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
                 (cmd, ctx) ->
                         ctx.thenPersist(
                                 AssignmentDeleted.builder()
+                                        .id(entityId())
                                         .assignment(cmd.getAssignment())
                                         .build(),
                                 evt -> ctx.reply(Done.getInstance())
