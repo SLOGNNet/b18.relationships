@@ -148,12 +148,36 @@ public class MongoRelationshipRepository implements RelationshipRepository {
                                                                                        RelationshipUpdated e) {
             UpdateOperations updateOperations = datastore.createUpdateOperations(RelationshipState.class);
 
-            if (e.getProvider().isPresent()) updateOperations.set("provider", e.getProvider().get());
-            if (e.getCustomer().isPresent()) updateOperations.set("customer", e.getCustomer().get());
-            if (e.getStartDate().isPresent()) updateOperations.set("startDate", e.getStartDate().get());
-            if (e.getTerminationDate().isPresent()) updateOperations.set("terminationDate", e.getTerminationDate().get());
-            if (e.getNotes().isPresent()) updateOperations.set("notes", e.getNotes().get());
-            if (e.getAssignments().isPresent()) updateOperations.set("assignments", e.getAssignments().get());
+            if (e.getProvider().isPresent()) {
+                updateOperations.set("provider", e.getProvider().get());
+            } else {
+                updateOperations.unset("provider");
+            }
+            if (e.getCustomer().isPresent()) {
+                updateOperations.set("customer", e.getCustomer().get());
+            } else {
+                updateOperations.unset("customer");
+            }
+            if (e.getStartDate().isPresent()) {
+                updateOperations.set("startDate", e.getStartDate().get());
+            } else {
+                updateOperations.unset("startDate");
+            }
+            if (e.getTerminationDate().isPresent()) {
+                updateOperations.set("terminationDate", e.getTerminationDate().get());
+            } else {
+                updateOperations.unset("terminationDate");
+            }
+            if (e.getNotes().isPresent()) {
+                updateOperations.set("notes", e.getNotes().get());
+            } else {
+                updateOperations.unset("notes");
+            }
+            if (e.getAssignments().isPresent()) {
+                updateOperations.set("assignments", e.getAssignments().get());
+            } else {
+                updateOperations.unset("assignments");
+            }
 
             return updateOperations;
         }
