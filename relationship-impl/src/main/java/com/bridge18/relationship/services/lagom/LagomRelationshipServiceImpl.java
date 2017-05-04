@@ -18,6 +18,8 @@ import org.pcollections.TreePVector;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class LagomRelationshipServiceImpl implements LagomRelationshipService {
     private RelationshipService relationshipService;
@@ -128,6 +130,18 @@ public class LagomRelationshipServiceImpl implements LagomRelationshipService {
 
     @Override
     public ServiceCall<NotUsed, PaginatedSequence<RelationshipDTO>> getRelationshipSummaries(Optional<Integer> pageNumber, Optional<Integer> pageSize) {
-        return request -> relationshipRepository.getRelationships(pageNumber.orElse(1), pageSize.orElse(PAGE_SIZE));
+        return request -> {
+            PaginatedSequence<RelationshipState> relationships = relationshipRepository.getRelationships(pageNumber.orElse(1), pageSize.orElse(PAGE_SIZE));
+            return CompletableFuture.completedFuture(
+                    new PaginatedSequence<>(
+                            TreePVector.from(
+                                    relationships.getValues().stream().map(this::convertRelationshipStateToRelationshipDTO)
+                                            .collect(Collectors.toList())
+                            ),
+                            relationships.getPageSize(),
+                            relationships.getCount()
+                    )
+            );
+        };
     }
 }

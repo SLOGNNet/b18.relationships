@@ -1,10 +1,8 @@
 package com.bridge18.relationship.repository;
 
-import com.bridge18.relationship.dto.relationship.RelationshipDTO;
 import com.bridge18.relationship.dto.relationship.PaginatedSequence;
-
-import java.util.concurrent.CompletionStage;
+import com.bridge18.relationship.entities.relationship.RelationshipState;
 
 public interface RelationshipRepository {
-    CompletionStage<PaginatedSequence<RelationshipDTO>> getRelationships(int pageNumber, int pageSize);
+    PaginatedSequence<RelationshipState> getRelationships(int pageNumber, int pageSize);
 }

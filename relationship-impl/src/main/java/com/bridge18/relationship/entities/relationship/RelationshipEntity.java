@@ -29,21 +29,22 @@ public class RelationshipEntity extends PersistentEntity<RelationshipCommand, Re
                                 .terminationDate(cmd.getTerminationDate())
                                 .notes(cmd.getNotes())
                                 .assignments(cmd.getAssignments())
-                                .build(),
-                        RelationshipUpdated.builder()
-                                .id(entityId())
-                                .provider(cmd.getProvider())
-                                .customer(cmd.getCustomer())
-                                .startDate(cmd.getStartDate())
-                                .terminationDate(cmd.getTerminationDate())
-                                .notes(cmd.getNotes())
-                                .assignments(cmd.getAssignments())
                                 .build()
                 ));
 
         b.setEventHandlerChangingBehavior(
                 RelationshipCreated.class,
-                relationshipCreated -> created(state())
+                evt -> created(
+                        RelationshipState.builder()
+                                .id(entityId())
+                                .provider(evt.getProvider())
+                                .customer(evt.getCustomer())
+                                .startDate(evt.getStartDate())
+                                .terminationDate(evt.getTerminationDate())
+                                .notes(evt.getNotes())
+                                .assignments(evt.getAssignments())
+                                .build()
+                )
         );
 
         return b.build();

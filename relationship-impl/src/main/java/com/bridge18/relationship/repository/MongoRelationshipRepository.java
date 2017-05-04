@@ -39,41 +39,18 @@ public class MongoRelationshipRepository implements RelationshipRepository {
     }
 
     @Override
-    public CompletionStage<PaginatedSequence<RelationshipDTO>> getRelationships(int pageNumber, int pageSize) {
-        List<MongoRelationship> relationships = datastore.createQuery(MongoRelationship.class)
+    public PaginatedSequence<RelationshipState> getRelationships(int pageNumber, int pageSize) {
+        List<RelationshipState> relationships = datastore.createQuery(RelationshipState.class)
                 .asList(new FindOptions().skip(pageNumber > 0 ? (pageNumber - 1) * pageSize : 0)
                         .limit(pageSize)
                 );
-        return CompletableFuture.completedFuture(
-                new PaginatedSequence<>(
-                        TreePVector.from(
-                                relationships.stream()
-                                        .map(this::transformRelationshipToRelationshipDTO)
-                                        .collect(Collectors.toList())
-                        ),
-                        pageSize,
-                        (int) datastore.getCount(datastore.createQuery(MongoRelationship.class))
-                )
+        return new PaginatedSequence<>(
+                TreePVector.from(
+                        relationships
+                ),
+                pageSize,
+                (int) datastore.getCount(datastore.createQuery(RelationshipState.class))
 
-
-        );
-    }
-
-    private RelationshipDTO transformRelationshipToRelationshipDTO(MongoRelationship relationship) {
-        List<AssignmentDTO> assignmentDTOList = relationship.getAssignments() != null ?
-                Lists.transform(relationship.getAssignments(), mongoAssignment ->
-                        new AssignmentDTO(
-                                mongoAssignment.getAssignment(),
-                                mongoAssignment.getType(),
-                                mongoAssignment.getNotes()
-                        )
-                ) : null;
-
-        return new RelationshipDTO(
-                relationship.getRelationshipId(), relationship.getProvider(),
-                relationship.getCustomer(), relationship.getStartDate(),
-                relationship.getTerminationDate(), relationship.getNotes(),
-                assignmentDTOList
         );
     }
 
@@ -98,7 +75,7 @@ public class MongoRelationshipRepository implements RelationshipRepository {
                             this::updateRelationshipSummary
                     )
                     .setEventHandler(RelationshipDeleted.class,
-                            (datastore, e) -> deleteRelationshipSummary(datastore, e.getId())
+                            this::deleteRelationshipSummary
                     )
                     .setEventHandler(AssignmentCreated.class,
                             this::insertAssignment
@@ -119,7 +96,7 @@ public class MongoRelationshipRepository implements RelationshipRepository {
                     //@TODO: indexing?
 
                     CompletableFuture.runAsync(() -> {
-                        datastore.ensureIndexes(MongoRelationship.class);
+                        datastore.ensureIndexes(RelationshipState.class);
                     })
             );
         }
@@ -135,63 +112,57 @@ public class MongoRelationshipRepository implements RelationshipRepository {
 
             return CompletableFuture.runAsync(() -> {
                 datastore.save(
-                        new MongoRelationship(e.getId(), e.getProvider().orElse(null),
-                                e.getCustomer().orElse(null), e.getStartDate().orElse(null),
-                                e.getTerminationDate().orElse(null), e.getNotes().orElse(null),
-                                transformPVectorToList(e.getAssignments())
-                        )
+                        createRelationshipState(e)
                 );
             });
         }
 
-        private List<MongoAssignment> transformPVectorToList(Optional<PVector<Assignment>> assignmentPVector) {
-            if (!assignmentPVector.isPresent() || assignmentPVector.get().isEmpty()) {
-                return new ArrayList<>();
-            }
+        private RelationshipState createRelationshipState(RelationshipCreated e){
+            RelationshipState.Builder builder = RelationshipState.builder().id(e.getId());
 
-            return assignmentPVector.get().stream()
-                    .map(assignment -> new MongoAssignment(
-                            assignment.getAssignment().orElse(null),
-                            assignment.getType().orElse(null),
-                            assignment.getNotes().orElse(null)
-                    ))
-                    .collect(Collectors.toList());
+            if(e.getProvider().isPresent()) builder.provider(e.getProvider().get());
+            if(e.getCustomer().isPresent()) builder.customer(e.getCustomer().get());
+            if(e.getStartDate().isPresent()) builder.startDate(e.getStartDate().get());
+            if(e.getTerminationDate().isPresent()) builder.terminationDate(e.getTerminationDate().get());
+            if(e.getNotes().isPresent()) builder.notes(e.getNotes().get());
+            if(e.getAssignments().isPresent()) builder.assignments(e.getAssignments().get());
+
+            return builder.build();
         }
 
         private CompletionStage<Void> updateRelationshipSummary(Datastore datastore,
                                                                 RelationshipUpdated e) {
 
             return CompletableFuture.runAsync(() -> {
-                UpdateOperations<MongoRelationship> updateOperations = setNotNullFieldsInUpdateOperations(datastore, e);
+                UpdateOperations<RelationshipState> updateOperations = setNotNullFieldsInUpdateOperations(datastore, e);
 
                 datastore.update(
-                        datastore.createQuery(MongoRelationship.class).field("relationshipId").equal(e.getId()),
+                        datastore.createQuery(RelationshipState.class).field("id").equal(e.getId()),
                         updateOperations
                 );
             });
         }
 
-        private UpdateOperations<MongoRelationship> setNotNullFieldsInUpdateOperations(Datastore datastore,
+
+        private UpdateOperations<RelationshipState> setNotNullFieldsInUpdateOperations(Datastore datastore,
                                                                                        RelationshipUpdated e) {
-            UpdateOperations updateOperations = datastore.createUpdateOperations(MongoRelationship.class);
+            UpdateOperations updateOperations = datastore.createUpdateOperations(RelationshipState.class);
 
             if (e.getProvider().isPresent()) updateOperations.set("provider", e.getProvider().get());
             if (e.getCustomer().isPresent()) updateOperations.set("customer", e.getCustomer().get());
             if (e.getStartDate().isPresent()) updateOperations.set("startDate", e.getStartDate().get());
-            if (e.getTerminationDate().isPresent())
-                updateOperations.set("terminationDate", e.getTerminationDate().get());
+            if (e.getTerminationDate().isPresent()) updateOperations.set("terminationDate", e.getTerminationDate().get());
             if (e.getNotes().isPresent()) updateOperations.set("notes", e.getNotes().get());
-            if (e.getAssignments().isPresent())
-                updateOperations.set("assignments", transformPVectorToList(e.getAssignments()));
+            if (e.getAssignments().isPresent()) updateOperations.set("assignments", e.getAssignments().get());
 
             return updateOperations;
         }
 
-        private CompletionStage<Void> deleteRelationshipSummary(Datastore datastore, String relationshipId) {
+        private CompletionStage<Void> deleteRelationshipSummary(Datastore datastore, RelationshipDeleted e) {
             return CompletableFuture.runAsync(() -> {
-                        Query<MongoRelationship> relationshipsToDelete = datastore.createQuery(MongoRelationship.class)
-                                .field("relationshipId")
-                                .equal(relationshipId);
+                        Query<RelationshipState> relationshipsToDelete = datastore.createQuery(RelationshipState.class)
+                                .field("id")
+                                .equal(e.getId());
                         datastore.delete(relationshipsToDelete);
                     }
             );
@@ -200,23 +171,30 @@ public class MongoRelationshipRepository implements RelationshipRepository {
         private CompletionStage<Void> insertAssignment(Datastore datastore, AssignmentCreated e) {
             return CompletableFuture.runAsync(() -> {
                 datastore.update(
-                        datastore.createQuery(MongoRelationship.class).field("relationshipId").equal(e.getId()),
-                        datastore.createUpdateOperations(MongoRelationship.class)
-                                .push("assignments", new MongoAssignment(
-                                        e.getAssignment().orElse(null),
-                                        e.getType().orElse(null),
-                                        e.getNotes().orElse(null)
-                                ))
+                        datastore.createQuery(RelationshipState.class).field("id").equal(e.getId()),
+                        datastore.createUpdateOperations(RelationshipState.class)
+                                .push("assignments", createAssignment(e))
                 );
             });
+        }
+
+        private Assignment createAssignment(AssignmentCreated e){
+            Assignment.Builder builder = Assignment.builder();
+
+            if(e.getAssignment().isPresent()) builder.assignment(e.getAssignment().get());
+            if(e.getType().isPresent()) builder.type(e.getType().get());
+            if(e.getNotes().isPresent()) builder.notes(e.getNotes().get());
+
+            return builder.build();
         }
 
         private CompletionStage<Void> deleteAssignment(Datastore datastore, AssignmentDeleted e) {
             return CompletableFuture.runAsync(() -> {
                 datastore.update(
-                        datastore.createQuery(MongoRelationship.class).field("relationshipId").equal(e.getId()),
-                        datastore.createUpdateOperations(MongoRelationship.class)
-                                .removeAll("assignments", new MongoAssignment(e.getAssignment().get(), null, null))
+                        datastore.createQuery(RelationshipState.class).field("id").equal(e.getId()),
+                        datastore.createUpdateOperations(RelationshipState.class)
+                                .removeAll("assignments",
+                                        Assignment.builder().assignment(e.getAssignment().get()).build())
                 );
             });
         }
