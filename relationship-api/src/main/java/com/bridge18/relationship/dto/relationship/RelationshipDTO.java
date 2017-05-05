@@ -1,8 +1,11 @@
 package com.bridge18.relationship.dto.relationship;
 
+import lombok.EqualsAndHashCode;
+
 import java.util.Date;
 import java.util.List;
 
+@EqualsAndHashCode
 public class RelationshipDTO {
     public String id;
     public String provider;
