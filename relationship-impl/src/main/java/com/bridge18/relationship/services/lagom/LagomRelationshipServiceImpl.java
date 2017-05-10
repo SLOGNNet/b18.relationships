@@ -4,9 +4,11 @@ import akka.Done;
 import akka.NotUsed;
 import com.bridge18.relationship.api.LagomRelationshipService;
 import com.bridge18.relationship.dto.relationship.AssignmentDTO;
+import com.bridge18.relationship.dto.relationship.PaginatedSequence;
 import com.bridge18.relationship.dto.relationship.RelationshipDTO;
 import com.bridge18.relationship.entities.relationship.Assignment;
 import com.bridge18.relationship.entities.relationship.RelationshipState;
+import com.bridge18.relationship.repository.RelationshipRepository;
 import com.bridge18.relationship.services.objects.RelationshipService;
 import com.google.common.collect.Lists;
 import com.lightbend.lagom.javadsl.api.ServiceCall;
@@ -16,13 +18,19 @@ import org.pcollections.TreePVector;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class LagomRelationshipServiceImpl implements LagomRelationshipService {
     private RelationshipService relationshipService;
+    private RelationshipRepository relationshipRepository;
+
+    static final int PAGE_SIZE = 20;
 
     @Inject
-    public LagomRelationshipServiceImpl(RelationshipService relationshipService) {
+    public LagomRelationshipServiceImpl(RelationshipService relationshipService, RelationshipRepository relationshipRepository) {
         this.relationshipService = relationshipService;
+        this.relationshipRepository = relationshipRepository;
     }
 
     @Override
@@ -118,5 +126,22 @@ public class LagomRelationshipServiceImpl implements LagomRelationshipService {
         );
 
         return relationshipDTO;
+    }
+
+    @Override
+    public ServiceCall<NotUsed, PaginatedSequence<RelationshipDTO>> getRelationshipSummaries(Optional<Integer> pageNumber, Optional<Integer> pageSize) {
+        return request -> {
+            PaginatedSequence<RelationshipState> relationships = relationshipRepository.getRelationships(pageNumber.orElse(1), pageSize.orElse(PAGE_SIZE));
+            return CompletableFuture.completedFuture(
+                    new PaginatedSequence<>(
+                            TreePVector.from(
+                                    relationships.getValues().stream().map(this::convertRelationshipStateToRelationshipDTO)
+                                            .collect(Collectors.toList())
+                            ),
+                            relationships.getPageSize(),
+                            relationships.getCount()
+                    )
+            );
+        };
     }
 }

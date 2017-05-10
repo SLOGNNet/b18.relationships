@@ -1,6 +1,8 @@
 package com.bridge18.relationship;
 
 import com.bridge18.relationship.api.LagomRelationshipService;
+import com.bridge18.relationship.repository.MongoRelationshipRepository;
+import com.bridge18.relationship.repository.RelationshipRepository;
 import com.bridge18.relationship.services.lagom.LagomRelationshipServiceImpl;
 import com.bridge18.relationship.services.objects.RelationshipService;
 import com.bridge18.relationship.services.objects.impl.RelationshipServiceImpl;
@@ -11,6 +13,7 @@ public class RelationshipModule extends AbstractModule implements ServiceGuiceSu
     @Override
     protected void configure() {
         bind(RelationshipService.class).to(RelationshipServiceImpl.class);
+        bind(RelationshipRepository.class).to(MongoRelationshipRepository.class);
 
         bindServices(serviceBinding(LagomRelationshipService.class, LagomRelationshipServiceImpl.class));
     }

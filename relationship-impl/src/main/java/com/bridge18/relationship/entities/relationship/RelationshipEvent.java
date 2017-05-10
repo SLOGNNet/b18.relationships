@@ -3,6 +3,10 @@ package com.bridge18.relationship.entities.relationship;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.lightbend.lagom.javadsl.immutable.ImmutableStyle;
+import com.lightbend.lagom.javadsl.persistence.AggregateEvent;
+import com.lightbend.lagom.javadsl.persistence.AggregateEventShards;
+import com.lightbend.lagom.javadsl.persistence.AggregateEventTag;
+import com.lightbend.lagom.javadsl.persistence.AggregateEventTagger;
 import com.lightbend.lagom.serialization.Jsonable;
 import org.immutables.value.Value;
 import org.pcollections.PVector;
@@ -10,7 +14,15 @@ import org.pcollections.PVector;
 import java.util.Date;
 import java.util.Optional;
 
-public interface RelationshipEvent extends Jsonable {
+public interface RelationshipEvent extends Jsonable, AggregateEvent<RelationshipEvent> {
+    int NUM_SHARDS = 4;
+    AggregateEventShards<RelationshipEvent> TAG = AggregateEventTag.sharded(RelationshipEvent.class, NUM_SHARDS);
+
+    @Override
+    default AggregateEventTagger<RelationshipEvent> aggregateTag() {
+        return TAG;
+    }
+
     @Value.Immutable
     @JsonDeserialize
     @ImmutableStyle
@@ -66,6 +78,8 @@ public interface RelationshipEvent extends Jsonable {
     @ImmutableStyle
     interface AbstractAssignmentCreated extends RelationshipEvent{
         @Value.Parameter
+        String getId();
+        @Value.Parameter
         Optional<String> getAssignment();
         @Value.Parameter
         Optional<AssignmentType> getType();
@@ -77,6 +91,8 @@ public interface RelationshipEvent extends Jsonable {
     @JsonDeserialize
     @ImmutableStyle
     interface AbstractAssignmentDeleted extends RelationshipEvent{
+        @Value.Parameter
+        String getId();
         @Value.Parameter
         Optional<String> getAssignment();
     }

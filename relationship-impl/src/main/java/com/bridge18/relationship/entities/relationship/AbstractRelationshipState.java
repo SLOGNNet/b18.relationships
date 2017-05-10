@@ -3,6 +3,7 @@ package com.bridge18.relationship.entities.relationship;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.lightbend.lagom.javadsl.immutable.ImmutableStyle;
+import com.lightbend.lagom.serialization.Jsonable;
 import org.immutables.value.Value;
 import org.pcollections.PVector;
 
@@ -12,7 +13,7 @@ import java.util.Optional;
 @Value.Immutable
 @ImmutableStyle
 @JsonDeserialize
-public interface AbstractRelationshipState {
+public interface AbstractRelationshipState extends Jsonable {
     @Value.Parameter
     String getId();
 
