@@ -3,11 +3,8 @@ package com.bridge18.relationship.repository;
 
 import akka.Done;
 import com.bridge18.readside.mongodb.readside.MongodbReadSide;
-import com.bridge18.relationship.dto.relationship.AssignmentDTO;
 import com.bridge18.relationship.dto.relationship.PaginatedSequence;
-import com.bridge18.relationship.dto.relationship.RelationshipDTO;
 import com.bridge18.relationship.entities.relationship.*;
-import com.google.common.collect.Lists;
 import com.lightbend.lagom.javadsl.persistence.AggregateEventTag;
 import com.lightbend.lagom.javadsl.persistence.ReadSide;
 import com.lightbend.lagom.javadsl.persistence.ReadSideProcessor;
@@ -17,18 +14,14 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.pcollections.PSequence;
-import org.pcollections.PVector;
 import org.pcollections.TreePVector;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 
-import static com.bridge18.relationship.core.CompletionStageUtils.doAll;
+import static com.bridge18.core.CompletionStageUtils.doAll;
 
 public class MongoRelationshipRepository implements RelationshipRepository {
     private Datastore datastore;
@@ -69,7 +62,6 @@ public class MongoRelationshipRepository implements RelationshipRepository {
         public ReadSideHandler<RelationshipEvent> buildHandler() {
             return readSide.<RelationshipEvent>builder("mongoRelationshipEventOffset")
                     .setGlobalPrepare(this::globalPrepare)
-                    .setPrepare(this::prepareStatements)
                     .setEventHandler(RelationshipCreated.class,
                             this::insertRelationshipSummary
                     )
@@ -95,17 +87,9 @@ public class MongoRelationshipRepository implements RelationshipRepository {
 
         private CompletionStage<Done> globalPrepare(Datastore datastore) {
             return doAll(
-                    //@TODO: indexing?
-
                     CompletableFuture.runAsync(() -> {
                         datastore.ensureIndexes(RelationshipState.class);
                     })
-            );
-        }
-
-        private CompletionStage<Done> prepareStatements(Datastore datastore, AggregateEventTag<RelationshipEvent> tag) {
-            return doAll(
-                    //@TODO: indexing?
             );
         }
 
@@ -119,15 +103,15 @@ public class MongoRelationshipRepository implements RelationshipRepository {
             });
         }
 
-        private RelationshipState createRelationshipState(RelationshipCreated e){
+        private RelationshipState createRelationshipState(RelationshipCreated e) {
             RelationshipState.Builder builder = RelationshipState.builder().id(e.getId());
 
-            if(e.getProvider().isPresent()) builder.provider(e.getProvider().get());
-            if(e.getCustomer().isPresent()) builder.customer(e.getCustomer().get());
-            if(e.getStartDate().isPresent()) builder.startDate(e.getStartDate().get());
-            if(e.getTerminationDate().isPresent()) builder.terminationDate(e.getTerminationDate().get());
-            if(e.getNotes().isPresent()) builder.notes(e.getNotes().get());
-            if(e.getAssignments().isPresent()) builder.assignments(e.getAssignments().get());
+            if (e.getProvider().isPresent()) builder.provider(e.getProvider().get());
+            if (e.getCustomer().isPresent()) builder.customer(e.getCustomer().get());
+            if (e.getStartDate().isPresent()) builder.startDate(e.getStartDate().get());
+            if (e.getTerminationDate().isPresent()) builder.terminationDate(e.getTerminationDate().get());
+            if (e.getNotes().isPresent()) builder.notes(e.getNotes().get());
+            if (e.getAssignments().isPresent()) builder.assignments(e.getAssignments().get());
 
             return builder.build();
         }
@@ -204,12 +188,12 @@ public class MongoRelationshipRepository implements RelationshipRepository {
             });
         }
 
-        private Assignment createAssignment(AssignmentCreated e){
+        private Assignment createAssignment(AssignmentCreated e) {
             Assignment.Builder builder = Assignment.builder();
 
-            if(e.getAssignment().isPresent()) builder.assignment(e.getAssignment().get());
-            if(e.getType().isPresent()) builder.type(e.getType().get());
-            if(e.getNotes().isPresent()) builder.notes(e.getNotes().get());
+            if (e.getAssignment().isPresent()) builder.assignment(e.getAssignment().get());
+            if (e.getType().isPresent()) builder.type(e.getType().get());
+            if (e.getNotes().isPresent()) builder.notes(e.getNotes().get());
 
             return builder.build();
         }
